@@ -1,0 +1,87 @@
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from datetime import datetime, timedelta
+import subprocess
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 4, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+def invoke_curl_command():
+    # Define your Curl command
+    curl_command = [
+        'curl',
+        '-X',
+        'POST',
+        '-H',
+        'Content-Type: application/json',
+        '-d',
+        '{"key": "value"}',
+        'https://your.api.endpoint'
+    ]
+    
+    # Execute the Curl command
+    subprocess.run(curl_command)
+
+with DAG(
+    'curl_invoke_example',
+    default_args=default_args,
+    description='A DAG to invoke a Curl command',
+    schedule_interval='@daily',
+    catchup=False
+) as dag:
+
+    # Define a PythonOperator to invoke the Curl command
+    invoke_curl = PythonOperator(
+        task_id='invoke_curl_task',
+        python_callable=invoke_curl_command
+    )
+
+
+
+      from airflow import DAG
+from airflow.providers.google.cloud.operators.cloud_build import CloudBuildTriggerCreateOperator
+from airflow.operators.bash_operator import BashOperator
+from datetime import datetime, timedelta
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 4, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'curl_trigger_example',
+    default_args=default_args,
+    description='A DAG to trigger a Curl command',
+    schedule_interval='@daily',
+    catchup=False
+)
+
+# Define your Curl command
+curl_command = """
+curl -X POST \
+    -H "Content-Type: application/json" \
+    -d '{"key": "value"}' \
+    https://your.api.endpoint
+"""
+
+# Define a BashOperator to execute the Curl command
+curl_trigger = BashOperator(
+    task_id='curl_trigger_task',
+    bash_command=curl_command,
+    dag=dag
+)
+
+# Define the order of tasks
+curl_trigger
