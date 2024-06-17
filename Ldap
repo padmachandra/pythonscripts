@@ -1,0 +1,25 @@
+from ldap3 import Server, Connection, ALL
+
+# Define your AD domain details
+domain_name = 'your_domain.com'
+user_dn = 'CN=your_username,CN=Users,DC=your_domain,DC=com'
+password = 'your_password'
+
+# Establish a connection to the AD domain
+server = Server(domain_name, get_info=ALL)
+conn = Connection(server, user_dn, password, auto_bind=True)
+
+# Perform a search operation to get all user details
+search_base = 'DC=your_domain,DC=com'
+search_filter = '(objectClass=user)'
+attributes = ['cn', 'mail', 'memberOf']  # Add more attributes as needed
+
+# Execute the search
+conn.search(search_base, search_filter, attributes=attributes)
+
+# Print out the results
+for entry in conn.entries:
+    print(entry)
+
+# Close the connection
+conn.unbind()
