@@ -1,0 +1,60 @@
+import csv
+
+# Specify the column indices to skip (0-based index)
+columns_to_skip = [2, 3, 5]  # Example: skip the 3rd, 4th, and 6th columns
+
+# Specify the column indices to sort by
+columns_to_sort = [1, 4]  # Example: sort by 2nd and 5th columns
+
+# File paths
+file1 = 'file1.csv'
+file2 = 'file2.csv'
+
+# Function to standardize data formats
+def standardize_row(row):
+    standardized_row = []
+    for value in row:
+        try:
+            # Try to convert to a float if possible
+            standardized_value = float(value)
+        except ValueError:
+            # Otherwise, strip leading/trailing spaces and lower-case strings
+            standardized_value = value.strip().lower()
+        standardized_row.append(str(standardized_value))
+    return standardized_row
+
+# Function to read, sort, and standardize rows
+def read_sort_standardize(file_path, columns_to_sort):
+    with open(file_path, mode='r') as f:
+        reader = csv.reader(f)
+        rows = list(reader)
+        header, data = rows[0], rows[1:]  # Separate header and data
+        data = [standardize_row(row) for row in data]  # Standardize formats
+        data.sort(key=lambda x: [x[col] for col in columns_to_sort])  # Sort rows
+        return header, data
+
+# Read, sort, and standardize both files
+header1, sorted_data1 = read_sort_standardize(file1, columns_to_sort)
+header2, sorted_data2 = read_sort_standardize(file2, columns_to_sort)
+
+# Compare rows (after sorting, skipping, and standardizing columns)
+mismatches = []  # To store mismatched rows
+row_index = 1    # Initialize row index for user-friendly output
+
+for row1, row2 in zip(sorted_data1, sorted_data2):
+    # Remove the columns to skip from both rows
+    filtered_row1 = [value for idx, value in enumerate(row1) if idx not in columns_to_skip]
+    filtered_row2 = [value for idx, value in enumerate(row2) if idx not in columns_to_skip]
+    
+    # Compare filtered rows
+    if filtered_row1 != filtered_row2:
+        mismatches.append((row_index, filtered_row1, filtered_row2))
+    row_index += 1
+
+# Print mismatched rows
+if mismatches:
+    print(f"Found {len(mismatches)} mismatches:")
+    for index, row1, row2 in mismatches:
+        print(f"Row {index}: {row1} != {row2}")
+    else:
+        print("All rows match (excluding the skipped columns).")
